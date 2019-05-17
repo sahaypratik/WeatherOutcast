@@ -23,36 +23,34 @@ import java.net.HttpURLConnection
 import java.util.*
 import kotlin.collections.ArrayList
 
-public class DataGenerator(val context: Context):ViewModel() {
+public class DataGenerator(val context: Context) : ViewModel() {
 
     val userService: UserService = ApiUtils.getUserService()
     lateinit var respObj: RespObj
     lateinit var c_name: String
     val myAppDatabase: MyAppDatabase = MyAppDatabase.getInstance(context)!!
     lateinit var mList: MutableList<String>
-    val dataResponse=MutableLiveData<MutableList<String>>()
+    val dataResponse = MutableLiveData<MutableList<String>>()
 
 
-    fun getList(boolean: Boolean,cityname: String,pbLoading: ProgressBar): LiveData<MutableList<String>> {
-
-        c_name=cityname
+    fun getList(boolean: Boolean, cityname: String, pbLoading: ProgressBar): LiveData<MutableList<String>> {
+        c_name = cityname
         mList = ArrayList<String>()
         if (boolean) {
-            makeApiCall(c_name,pbLoading)
+            makeApiCall(c_name, pbLoading)
         } else {
-            makeDbCall(c_name,pbLoading)
+            makeDbCall(c_name, pbLoading)
         }
         return dataResponse
     }
 
 
-    fun makeApiCall(cityname: String,pbLoading:ProgressBar) {
+    fun makeApiCall(cityname: String, pbLoading: ProgressBar) {
         val i_date = Date()
         SharedPref.setData(context, cityname, TimeCalculations.toISO8601UTC(i_date))
 
-        if (pbLoading!=null)
-        {
-            pbLoading.visibility=View.VISIBLE
+        if (pbLoading != null) {
+            pbLoading.visibility = View.VISIBLE
         }
         val call: Call<RespObj>
         call = userService.fetchData(cityname)
@@ -75,15 +73,15 @@ public class DataGenerator(val context: Context):ViewModel() {
                     mList.add(respObj.main!!.pressure.toString())
                     mList.add(respObj.main!!.humidity.toString())
                     mList.add(respObj.weather!!.get(0)!!.description.toString())
-                    dataResponse.value=mList
+                    dataResponse.value = mList
                     DetailsActivity.getInstance().setRvAdapter()
-                    pbLoading.visibility=View.GONE
+                    pbLoading.visibility = View.GONE
                 }
             }
 
             override fun onFailure(call: Call<RespObj>, t: Throwable) {
 
-                pbLoading.visibility=View.GONE
+                pbLoading.visibility = View.GONE
                 Toast.makeText(context, "network Error", Toast.LENGTH_SHORT).show()
 
             }
@@ -93,10 +91,9 @@ public class DataGenerator(val context: Context):ViewModel() {
     }
 
 
-    fun makeDbCall(cityname: String,pbLoading: ProgressBar) {
-        if (pbLoading!=null)
-        {
-            pbLoading.visibility=View.VISIBLE
+    fun makeDbCall(cityname: String, pbLoading: ProgressBar) {
+        if (pbLoading != null) {
+            pbLoading.visibility = View.VISIBLE
         }
         var weatherData: WeatherData = myAppDatabase.weatherDataDao().getData(cityname)
         if (weatherData != null) {
@@ -107,13 +104,13 @@ public class DataGenerator(val context: Context):ViewModel() {
             mList.add(weatherData.pressure.toString())
             mList.add(weatherData.humidity.toString())
             mList.add(weatherData.weatherdescription.toString())
-            dataResponse.value=mList
+            dataResponse.value = mList
 
+        } else {
+            Toast.makeText(context, "No Data found by this city name, try searching for London", Toast.LENGTH_SHORT)
+                .show()
         }
-        else{
-            Toast.makeText(context,"No Data found by this city name, try searching for London",Toast.LENGTH_SHORT).show()
-        }
-        pbLoading.visibility=View.GONE
+        pbLoading.visibility = View.GONE
 
     }
 
